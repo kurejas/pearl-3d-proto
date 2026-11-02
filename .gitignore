@@ -1,0 +1,7 @@
+.DS_Store
+__pycache__/
+tools/.venv/
+tools/bp3d_case/
+tools/test_case/
+# Recta and Helvetica Now are licensed typefaces: kept local, not redistributed (pages fall back to sans-serif)
+*/fonts/

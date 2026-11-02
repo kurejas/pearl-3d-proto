@@ -1,0 +1,913 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pearl 3D · v1 fake skull</title>
+<style>
+@font-face{font-family:"Recta";src:url(fonts/Recta-Regular.otf) format("opentype");font-weight:400;font-display:swap}
+@font-face{font-family:"Recta";src:url(fonts/Recta-Medium.otf) format("opentype");font-weight:500;font-display:swap}
+:root{
+  --panel:#32363a;--panel-a:rgba(50,54,58,.6);--well:#1e2023;--accent:#4891b7;
+  --item:rgba(84,91,97,.75);--item-off:rgba(84,91,97,.3);
+  --t1:#fff;--t2:rgba(255,255,255,.75);--t3:rgba(255,255,255,.7);--t4:rgba(255,255,255,.4);--t-off:rgba(255,255,255,.24);
+  --ax:#4891b7;--co:#5fc58f;--sa:#e9a23b;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#000}
+body{color:var(--t1);font:400 16px/normal "Recta",-apple-system,"Helvetica Neue",Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;overflow:hidden;user-select:none;-webkit-user-select:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;display:block}
+img{display:block}
+.app{position:fixed;inset:0;min-width:1000px;min-height:640px}
+
+/* ── header (Figma 4522:7860) ── */
+.hdr{position:absolute;left:1px;right:1px;top:1px;height:66px;background:var(--panel-a);border-radius:6px}
+.crumb{position:absolute;left:17px;top:0;height:66px;display:flex;align-items:center;white-space:nowrap}
+.crumb .sl{font-size:14px;color:var(--t4);margin:0 6px}
+.crumb .nm{color:var(--t2)}
+.dates{position:absolute;left:50%;top:11px;transform:translateX(-50%);display:flex;align-items:center;gap:20px}
+.dates .chips{display:flex;gap:5px}
+.chip{position:relative;width:54px;height:46px;border-radius:8px;background:var(--panel);color:var(--t3);font-weight:500;text-align:left}
+.chip small{position:absolute;left:7.5px;top:6px;font-size:11px;letter-spacing:.5px;text-transform:uppercase}
+.chip b{position:absolute;left:6.5px;top:19px;font-size:20px;font-weight:500;opacity:.9}
+.chip:hover{background:#3d4246}
+.chip.on{background:var(--accent);color:#fff}
+.ab{position:relative;width:32px;height:20px;font:500 12px/normal "Recta",sans-serif;color:rgba(255,255,255,.8)}
+.ab i{position:absolute;top:0;width:15px;height:20px;border:1px solid rgba(255,255,255,.8);font-style:normal;text-align:center;line-height:18px}
+.ab i:first-child{left:0;border-radius:4px 2px 2px 4px}.ab i:last-child{left:17px;border-radius:2px 4px 4px 2px}
+.ab.on i{background:rgba(255,255,255,.12)}
+.hr{position:absolute;right:19px;top:16px;display:flex;align-items:center;gap:24px}
+.export{background:var(--accent);border-radius:8px;padding:11px 14px 9px;font-size:16px}
+.export:hover{background:#5aa2c7}
+.phi{position:relative;width:46px;height:20px;border-radius:100px;background:var(--accent);transition:background .15s}
+.phi span{position:absolute;top:2px;right:2px;width:31px;height:16px;border-radius:100px;background:#fff;color:var(--accent);font:500 12px/16px "Recta",sans-serif;text-align:center;transition:right .15s}
+.phi:not(.on){background:#545b61}.phi:not(.on) span{right:13px;color:#545b61}
+.help{width:20px;height:20px;border-radius:100px;border:1px solid rgba(255,255,255,.5);color:rgba(255,255,255,.5);font-size:13px;line-height:18px;text-align:center}
+.av{width:28px;height:28px;border-radius:100px;background:#77a496;color:#000;font-size:16px;line-height:30px;text-align:center}
+
+/* ── stage (Figma "x-ray container") ── */
+.stage{position:absolute;top:70px;bottom:2px;left:2px;right:345px;background:#000;border-radius:6px;overflow:hidden}
+.app.noside .stage{right:55px}
+.views{position:absolute;inset:0 40px;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:2px}
+.views[data-layout=focus]{grid-template-columns:2fr 1fr;grid-template-rows:1fr 1fr 1fr}
+.views[data-layout=focus] .p3d{grid-row:1/4}
+.views[data-layout=single] .pane{display:none}
+.views[data-layout=single] .pane.max{display:block;grid-area:1/1/-1/-1}
+.pane{position:relative;overflow:hidden;background:#000;border:1px solid transparent;border-radius:4px;min-height:0;min-width:0}
+.pane.active{border-color:var(--accent)}
+.pane canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.plabel{position:absolute;left:10px;top:9px;font-size:10px;font-weight:500;letter-spacing:.6px;text-transform:uppercase;color:var(--t2);z-index:2;display:flex;align-items:center;gap:6px;pointer-events:none}
+.plabel i{width:6px;height:6px;border-radius:2px;background:var(--c)}
+.rd{position:absolute;right:26px;bottom:9px;font-size:11px;color:var(--t4);z-index:2;pointer-events:none;font-variant-numeric:tabular-nums}
+.sbar{position:absolute;right:8px;top:40px;bottom:40px;width:10px;z-index:2;cursor:ns-resize}
+.sbar i{position:absolute;left:3.5px;width:3px;height:26px;margin-top:-13px;border-radius:2px;background:#fff}
+.rb{position:absolute;right:8px;bottom:8px;display:flex;flex-direction:column;gap:2px;z-index:2}
+.rb button{width:24px;height:24px;opacity:.85}.rb button:hover{opacity:1}
+.navb{position:absolute;top:50%;width:24px;height:24px;margin-top:-12px;z-index:3;opacity:.85}
+.navb:hover{opacity:1}
+.navb.prev{left:8px}.navb.next{right:8px}
+.collapse{position:absolute;right:8px;top:8px;width:24px;height:24px;z-index:3;opacity:.85}
+.collapse:hover{opacity:1}
+.collapse .l{display:none}.app.noside .collapse .l{display:block}.app.noside .collapse .r{display:none}
+.markers{position:absolute;inset:0;pointer-events:none;z-index:1;overflow:hidden}
+.mk{position:absolute;left:0;top:0;width:18px;height:18px;margin:-9px 0 0 -9px;border:1.5px solid var(--c);border-radius:4px;background:color-mix(in srgb,var(--c) 10%,transparent);box-shadow:0 0 4px rgba(0,0,0,.25)}
+.mk.hid{display:none}
+.loader{position:absolute;inset:0;display:grid;place-items:center;color:var(--t4);font-size:13px;z-index:4;background:#000;text-align:center}
+.loader b{display:block;width:140px;height:2px;margin:10px auto 0;background:#1e2023;position:relative;overflow:hidden;border-radius:1px}
+.loader b i{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--accent);transition:width .15s}
+
+/* ── tool rail (Figma 4522:8025) ── */
+.rail{position:absolute;top:70px;bottom:2px;right:295px;width:50px;display:flex;flex-direction:column;gap:1px;border-radius:6px;overflow:hidden}
+.app.noside .rail{right:2px}
+.rail .grp{background:var(--panel);border-radius:2px;padding:8px 0;display:flex;flex-direction:column;align-items:center;gap:12px}
+.rail .grp:last-child{flex:1}
+.tb{width:34px;height:34px;border-radius:6px;display:grid;place-items:center;position:relative}
+.tb.wide{width:48px}
+.tb:hover:not(.on){background:#3d4246}
+.tb.on{background:var(--accent)}
+.tb.hand.on{background:none}
+.tb img{pointer-events:none}
+
+/* ── right panel (Figma 4522:7870) ── */
+.side{position:absolute;top:70px;bottom:2px;right:2px;width:290px;display:flex;flex-direction:column;gap:3px}
+.app.noside .side{display:none}
+.blk{border-radius:6px;overflow:hidden}
+.blk.tabsb{background:rgba(50,54,58,.5);flex:none}
+.tabsp{background:var(--panel);padding:9px 10px}
+.tabs{background:var(--well);border-radius:6px;padding:2px;display:flex}
+.tab{flex:1;padding:4px 12px;border-radius:4px;font:500 16px/20px "Recta",sans-serif;color:var(--t3);text-align:center}
+.tab.on{background:var(--accent);color:#fff}
+.blk.main{flex:1;min-height:0;display:flex;flex-direction:column;gap:1px}
+.pnl{background:var(--panel);border-radius:2px;flex:none}
+.pnl.ai{height:50px;position:relative}
+.pnl.ai p{position:absolute;left:18.7px;top:14px;font-size:17px;font-weight:500}
+.tog{position:absolute;right:20px;top:15px;width:31px;height:20px;border-radius:100px;background:var(--accent);transition:background .15s}
+.tog i{position:absolute;top:2px;right:2px;width:16px;height:16px;border-radius:100px;background:#fff;transition:right .15s}
+.tog:not(.on){background:#545b61}.tog:not(.on) i{right:13px}
+.pnl.path{padding:10px;display:flex;flex-direction:column;gap:10px}
+.ghead{height:30px;position:relative;border-radius:6px;cursor:pointer;flex:none}
+.ghead p{position:absolute;left:8.7px;top:4px;font-size:17px;font-weight:500;display:flex;align-items:center;gap:6px}
+.ghead.dim p{color:var(--t3)}
+.ghead .arw{width:6px;height:9px;display:grid;place-items:center;margin-top:2px}
+.ghead .arw img{transform:rotate(-90deg);transition:transform .15s}
+.ghead.open .arw img{transform:none}
+.ghead>.cb{position:absolute;right:15px;top:7.5px}
+.items{display:flex;flex-direction:column;gap:2px}
+.items.closed{display:none}
+.it{height:40px;border-radius:6px;position:relative;background:var(--item);cursor:pointer;flex:none;transition:background .15s}
+.it:hover{background:rgba(96,104,111,.85)}
+.it .lb{position:absolute;left:13.7px;right:50px;top:9px;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .15s}
+.it .n{position:absolute;right:38px;top:13px;font-size:12px;font-weight:500;color:rgba(255,255,255,.8);font-variant-numeric:tabular-nums}
+.it>.cb{position:absolute;right:15px;top:12.5px}
+.it.off{background:var(--item-off)}
+.it.off .lb{color:var(--t-off)}.it.off .n{color:rgba(255,255,255,.16)}
+.it.cur{box-shadow:inset 0 0 0 1px var(--c)}
+.cb{width:15px;height:15px;border-radius:4px;flex:none;position:relative;background:color-mix(in srgb,var(--c) 20%,transparent);cursor:pointer}
+.cb svg{position:absolute;inset:0;opacity:0}
+.cb.on{background:var(--c)}.cb.on svg{opacity:1}
+.cb.line{background:none;border:1px solid rgba(255,255,255,.5)}
+.cb.line svg{inset:-1px}
+.cb.part::after{content:"";position:absolute;left:3px;right:3px;top:6px;border-top:1px solid rgba(255,255,255,.5)}
+.pnl.more{flex:1;min-height:0;overflow-y:auto;padding:10px 10px 70px;display:flex;flex-direction:column;gap:10px}
+.pnl.more::-webkit-scrollbar{width:0}
+.grp-b{display:flex;flex-direction:column;gap:10px}
+.chart{display:grid;grid-template-columns:repeat(16,1fr);gap:2px;padding:2px 0}
+.chart .gap{grid-column:span 16;height:4px}
+.tooth{height:24px;border-radius:4px;background:var(--item);font:500 8px/24px "Recta",sans-serif;color:var(--t4);text-align:center;cursor:pointer;position:relative}
+.tooth:hover{background:rgba(96,104,111,.85);color:#fff}
+.tooth.miss{background:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.1);cursor:default}
+.tooth.rest{color:#fff}
+.tooth.f::after{content:"";position:absolute;bottom:3px;left:50%;width:4px;height:4px;margin-left:-2px;border-radius:1px;background:var(--c)}
+.tooth.sel{box-shadow:inset 0 0 0 1.5px var(--accent);color:#fff}
+.card{border-radius:6px;background:var(--item-off);padding:12px 12px 12px 13.7px;display:none;flex:none}
+.card.show{display:block}
+.card h4{font-weight:500;font-size:17px;display:flex;justify-content:space-between;align-items:center}
+.card h4 button{color:var(--t4);font-size:18px;line-height:1}
+.card p{color:var(--t4);font-size:13px;margin:4px 0 10px}
+.card .fl{display:flex;flex-direction:column;gap:2px;margin-bottom:10px}
+.card .fi{height:32px;border-radius:6px;background:var(--item);display:flex;align-items:center;gap:8px;padding:0 10px;font-size:14px;cursor:pointer}
+.card .fi i{width:10px;height:10px;border-radius:3px;background:var(--c)}
+.card .fi.none{background:none;padding:0;color:var(--t4);cursor:default}
+.card .acts{display:flex;gap:6px}
+.sbtn{flex:1;background:var(--well);border-radius:4px;padding:5px 7px 6px;font-size:13px;font-weight:500;color:var(--t3);text-align:center}
+.sbtn:hover{color:#fff}
+.sbtn.on{background:var(--accent);color:#fff}
+.chat{position:absolute;right:-7px;bottom:-14px;width:85px;height:85px;cursor:pointer;z-index:5}
+.empty{padding:40px 24px;color:var(--t4);text-align:center;line-height:1.45;font-size:15px}
+
+/* ── hover modal (Figma 4522:8143) ── */
+.hm{position:fixed;z-index:20;pointer-events:none;display:none;align-items:center;gap:9px;padding:6px 6px 6px 9px;border-radius:8px;
+  border:1px solid color-mix(in srgb,var(--c,#fff) 60%,transparent);background:#191b1d;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5));white-space:nowrap}
+.hm.show{display:flex}
+.hm .sp{width:16px;height:16px;background:var(--c);-webkit-mask:url(assets/sparkle.svg) center/contain no-repeat;mask:url(assets/sparkle.svg) center/contain no-repeat;flex:none}
+.hm .tx{font-size:15px;font-weight:500;padding-right:3px}
+.hm .tx small{display:block;font-size:12px;font-weight:400;color:var(--t4);margin-top:1px}
+.hm .eye{width:22px;height:22px;border-radius:4px;background:var(--panel);display:grid;place-items:center;pointer-events:auto}
+.hm .eye:hover{background:#454a4f}
+.hm .tail{position:absolute;left:50%;bottom:-6.17px;width:16px;height:7.172px;margin-left:-8px}
+.hm .tail::before,.hm .tail::after{content:"";position:absolute;inset:0;-webkit-mask:url(assets/tail.svg) center/100% 100% no-repeat;mask:url(assets/tail.svg) center/100% 100% no-repeat}
+.hm .tail::before{background:color-mix(in srgb,var(--c) 60%,transparent)}
+.hm .tail::after{background:#191b1d;inset:-1.4px 1.4px 1.4px}
+.hm.plain .sp,.hm.plain .eye,.hm.plain .tail{display:none}
+.hm.pin{z-index:3;position:absolute}
+.toast{position:fixed;z-index:30;left:50%;bottom:26px;transform:translate(-50%,12px);background:#191b1d;border:1px solid #3d4246;padding:9px 14px;border-radius:8px;font-size:14px;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.cursor-measure{cursor:crosshair}
+.credit{position:absolute;left:10px;bottom:9px;font-size:10px;color:var(--t4);z-index:2;pointer-events:none;max-width:70%}
+</style>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
+</script>
+</head>
+<body>
+<div class="app" id="app">
+  <header class="hdr">
+    <nav class="crumb"><img src="assets/home.svg" width="17" height="17" alt="Home"><span class="sl">/</span><span class="nm" id="ptName">Michael Broadwick</span><span class="sl">/</span><span>CBCT</span></nav>
+    <div class="dates"><div class="chips" id="chips"></div><button class="ab" id="ab" title="Compare A/B"><i>A</i><i>B</i></button></div>
+    <div class="hr">
+      <button class="export" id="export">Export</button>
+      <button class="phi on" id="phi" title="Protected health information"><span>PHI</span></button>
+      <button class="help" id="help" title="Shortcuts">?</button>
+      <div class="av">S</div>
+    </div>
+  </header>
+
+  <section class="stage" id="stage">
+    <div class="views" id="views" data-layout="quad">
+      <div class="pane p3d active" data-v="3d">
+        <div class="plabel">3D</div>
+        <canvas id="c3d"></canvas>
+        <div class="markers" id="markers"></div>
+        <div class="rb">
+          <button data-z="out" title="Zoom out"><img src="assets/z-minus.svg" width="24" height="24" alt=""></button>
+          <button data-z="in" title="Zoom in"><img src="assets/z-plus.svg" width="24" height="24" alt=""></button>
+          <button data-z="max" title="Maximize (double-click)"><img src="assets/z-full.svg" width="24" height="24" alt=""></button>
+        </div>
+        <div class="loader" id="loader"><div>Reconstructing volume<b><i id="lbar"></i></b></div></div>
+        <div class="credit" id="credit"></div>
+      </div>
+      <div class="pane" data-v="axial"><div class="plabel"><i style="--c:var(--ax)"></i>Axial</div><canvas></canvas><div class="sbar"><i></i></div><div class="rd"></div></div>
+      <div class="pane" data-v="sagittal"><div class="plabel"><i style="--c:var(--sa)"></i>Sagittal</div><canvas></canvas><div class="sbar"><i></i></div><div class="rd"></div></div>
+      <div class="pane" data-v="coronal"><div class="plabel"><i style="--c:var(--co)"></i>Coronal</div><canvas></canvas><div class="sbar"><i></i></div><div class="rd"></div></div>
+    </div>
+    <button class="navb prev" id="prevScan" title="Previous scan"><img src="assets/prev.svg" width="24" height="24" alt=""></button>
+    <button class="navb next" id="nextScan" title="Next scan"><img src="assets/next.svg" width="24" height="24" alt=""></button>
+    <button class="collapse" id="collapse" title="Toggle panel"><img class="r" src="assets/collapse-r.svg" width="24" height="24" alt=""><img class="l" src="assets/collapse-l.svg" width="24" height="24" alt=""></button>
+  </section>
+
+  <aside class="rail" id="rail">
+    <div class="grp">
+      <button class="tb hand on" data-tool="nav" title="Navigate (V)"><img src="assets/t-hand.svg" width="34" height="34" alt=""></button>
+      <button class="tb" data-tool="measure" title="Measure (M)"><img src="assets/t-ruler.svg" width="34" height="34" alt=""></button>
+    </div>
+    <div class="grp">
+      <button class="tb" data-tog="spin" title="Auto-rotate (R)"><img src="assets/t-rotate.svg" width="34" height="34" alt=""></button>
+    </div>
+    <div class="grp">
+      <button class="tb" data-tog="xray" title="See-through bone (B)"><img src="assets/t-tooth.svg" width="34" height="34" alt=""></button>
+      <button class="tb wide" data-act="window" title="Window preset (W)"><img src="assets/t-sun.svg" width="48" height="34" alt=""></button>
+      <button class="tb on" data-tog="planes" title="Slice planes in 3D (P)"><img src="assets/t-eye.svg" width="20" height="15" alt=""></button>
+    </div>
+    <div class="grp">
+      <button class="tb" data-act="reset" title="Reset views (0)"><img src="assets/t-redo.svg" width="34" height="34" alt=""></button>
+      <button class="tb" data-tog="invert" title="Invert slices (I)"><img src="assets/t-contrast.svg" width="34" height="34" alt=""></button>
+    </div>
+  </aside>
+
+  <aside class="side" id="side">
+    <div class="blk tabsb"><div class="tabsp"><div class="tabs" id="tabs"><button class="tab" data-t="xray">X-ray</button><button class="tab" data-t="photo">Photos</button><button class="tab on" data-t="cbct">CBCT</button></div></div></div>
+    <div class="blk main" id="mainBlk">
+      <div class="pnl ai"><p>AI Viewer</p><button class="tog on" id="ai"><i></i></button></div>
+      <div class="pnl path">
+        <div class="ghead" id="pathHead"><p>Pathology</p><span class="cb line" id="pathCk"></span></div>
+        <div class="items" id="plist"></div>
+      </div>
+      <div class="pnl more" id="more">
+        <div id="groups" class="grp-b"></div>
+        <div class="card" id="card"></div>
+      </div>
+    </div>
+    <div class="blk main empty" id="emptyTab" style="display:none;background:var(--panel)"></div>
+  </aside>
+  <img class="chat" src="assets/chat.svg" width="85" height="85" alt="Live chat" title="Ask Pearl">
+</div>
+<div class="hm" id="tip"><span class="sp"></span><span class="tx"></span></div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {clamp,RANGE,VOL,BONE,TEETH,TBY,FIND,TYPES,TNAME,QNAME,MISSING,RESTOR,LABEL_NAME,SINUS,NASAL,AIRW,CANALS,
+  rad,sample,SMP,boneParts,P,useScan} from './model.js';
+const V3=THREE.Vector3;
+const CHECK='<svg viewBox="0 0 15 15" fill="none"><path d="M3 7.79L5.77 10.58L12 4.35" stroke="var(--ck,#000)" stroke-linecap="round"/></svg>';
+const lum=h=>{const n=parseInt(h.slice(1),16);return(.3*(n>>16)+.59*(n>>8&255)+.11*(n&255))/255};
+
+/* ═══════════════ Scan: a real CBCT from tools/prepare_scan.py, else the procedural model ═══════════════ */
+// ?scan=path/to/scan.json picks a scan, ?scan=none forces the procedural model
+async function fetchGz(url){const r=await fetch(url);if(!r.ok)throw new Error(`${url} ${r.status}`);
+  return new Uint8Array(await new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer())}
+const scanUrl=new URLSearchParams(location.search).get('scan')??'data/scan/scan.json';
+let SCAN=null;
+if(scanUrl!=='none'){
+  try{
+    const r=await fetch(scanUrl);if(!r.ok)throw new Error(`${scanUrl} ${r.status}`);
+    const meta=await r.json(),base=scanUrl.replace(/[^/]*$/,'');
+    const [G,L]=await Promise.all([fetchGz(base+meta.files.gray),fetchGz(base+meta.files.labels)]);
+    SCAN={meta,G,L,F:useScan(meta,G,L)};
+  }catch(e){console.info('[pearl] no scan loaded, using the procedural model:',e.message)}
+}
+
+/* ═══════════════ State ═══════════════ */
+const incisor=TBY[11]||TBY[21]||TEETH[0];
+const HOMECUR=SCAN?{x:Math.round(incisor.c.x*2)/2,y:3,z:Math.round(TEETH.reduce((a,T)=>a+T.c.z,0)/TEETH.length*2)/2}:{x:-4,y:4,z:8};
+const S={
+  cur:{...HOMECUR},active:'3d',sel:null,selF:null,
+  typeOn:Object.fromEntries(Object.keys(TYPES).map(k=>[k,true])),
+  st:{maxilla:true,sinus:true,nasal:true,mandible:true,canal:true,teethU:true,teethL:true,airway:true},
+  ai:true,win:0,invert:false,planes:true,spin:false,xray:false,mode:'nav',isolate:false,layout:'quad',seed:5,
+};
+const WINDOWS=[{n:'Default',l:118,w:250},{n:'Bone',l:170,w:140},{n:'Soft tissue',l:82,w:150}];
+let ver=0;const bump=()=>{ver++;schedule()};
+const fOn=F=>S.ai&&S.typeOn[F.t];
+const tOn=T=>T.up?S.st.teethU:S.st.teethL;
+
+/* ═══════════════ Worker pool: bone fields first, then the voxel volume ═══════════════ */
+const NW=clamp((navigator.hardwareConcurrency||4)-1,2,8);
+const VN=VOL.nx*VOL.ny*VOL.nz;let VG,VL,VF;
+const BN=BONE.nx*BONE.ny*BONE.nz,BF1=SCAN?null:new Float32Array(BN),BF2=SCAN?null:new Float32Array(BN);
+const jobs=[];if(SCAN){VG=SCAN.G;VL=SCAN.L;VF=SCAN.F}else{VG=new Uint8Array(VN);VL=new Uint8Array(VN);VF=new Uint8Array(VN)}
+if(!SCAN)for(let j=0;j<BONE.ny;j+=6)jobs.push({kind:'bone',j0:j,j1:Math.min(BONE.ny,j+6)});
+if(!SCAN)for(let j=0;j<VOL.ny;j+=6)jobs.push({kind:'vol',j0:j,j1:Math.min(VOL.ny,j+6)});
+const boneTotal=jobs.filter(j=>j.kind==='bone').length;
+let boneLeft=boneTotal,volLeft=jobs.length-boneTotal,volReady=!!SCAN;
+const T0=performance.now();window.__perf={workers:NW};
+const pool=[],idle=[];
+// volume jobs wait for the bone pass: its coarse field lets the workers skip bone maths far from bone
+function dispatch(wk){
+  const j=jobs[0];
+  if(!j){wk.terminate();return}
+  if(j.kind==='vol'&&boneLeft){idle.push(wk);return}
+  wk.postMessage(jobs.shift());
+}
+for(let w=0;w<(SCAN?0:NW);w++){
+  const wk=new Worker('./worker.js',{type:'module'});pool.push(wk);
+  const next=()=>dispatch(wk);
+  wk.onmessage=({data:d})=>{
+    if(d.kind==='bone'){
+      const off=d.j0*BONE.nx*BONE.nz;BF1.set(d.f1,off);BF2.set(d.f2,off);
+      document.getElementById('lbar').style.width=(100*(1-(--boneLeft)/boneTotal))+'%';
+      if(!boneLeft){
+        window.__perf.bone=Math.round(performance.now()-T0);
+        for(const p of pool)p.postMessage({kind:'field',f1:BF1,f2:BF2});
+        idle.splice(0).forEach(dispatch);
+        buildBone();
+      }
+    }else{
+      const off=d.j0*VOL.nx*VOL.nz;VG.set(d.g,off);VL.set(d.l,off);VF.set(d.f,off);
+      if(!--volLeft){volReady=true;window.__perf.vol=Math.round(performance.now()-T0);schedule()}
+    }
+    next();
+  };
+  next();
+}
+
+// scan mode: one worker turns the label volume into bone, teeth and anatomy surfaces
+if(SCAN){
+  const m=SCAN.meta,wk=new Worker('./worker.js',{type:'module'});
+  const targets=[{key:'maxilla',labels:[2],ds:2},{key:'mandible',labels:[3],ds:2},{key:'sinus',labels:[4],ds:2},{key:'nasal',labels:[5],ds:2},
+    {key:'airway',labels:[6],ds:2},{key:'canal',labels:[7]},{key:'restor',labels:[8]},...m.teeth.map(t=>({key:'t'+t.fdi,labels:[t.label]}))];
+  wk.onmessage=({data})=>{if(data.kind!=='labelMeshes')return;wk.terminate();buildFromLabels(data.meshes);window.__perf.meshes=Math.round(performance.now()-T0)};
+  wk.postMessage({kind:'labelMeshes',L:SCAN.L,dims:m.dims,origin:m.origin,s:m.spacing,targets});
+  document.getElementById('lbar').style.width='60%';
+}
+
+/* ═══════════════ Slice views ═══════════════ */
+const N=256;let FOV=104;
+const NOISE=new Float32Array(N*N*2);
+function reseed(){let s=S.seed*9301+49297;for(let i=0;i<NOISE.length;i++){s=(s*16807)%2147483647;NOISE[i]=(s/2147483647-.5)}}
+reseed();
+const VIEWS={
+  axial:   {fix:'y',u:'x',us:1, v:'z',vs:1,cu:0,cv:4},
+  coronal: {fix:'z',u:'x',us:1, v:'y',vs:1,cu:0,cv:10.5},
+  sagittal:{fix:'x',u:'z',us:-1,v:'y',vs:1,cu:4,cv:10.5},
+};
+if(SCAN){                                     // frame the views on the scan's field of view
+  const c=a=>(RANGE[a][0]+RANGE[a][1])/2;
+  FOV=Math.max(...['x','y','z'].map(a=>RANGE[a][1]-RANGE[a][0]))*1.04;
+  Object.assign(VIEWS.axial,{cu:c('x'),cv:c('z')});Object.assign(VIEWS.coronal,{cu:c('x'),cv:c('y')});Object.assign(VIEWS.sagittal,{cu:c('z'),cv:c('y')});
+}
+const PLANE_COLOR={y:'#4891b7',z:'#5fc58f',x:'#e9a23b'};
+const MEAS={};
+for(const [name,V] of Object.entries(VIEWS)){
+  V.name=name;V.pane=document.querySelector(`.pane[data-v="${name}"]`);V.el=V.pane.querySelector('canvas');V.ctx=V.el.getContext('2d');
+  V.off=document.createElement('canvas');V.off.width=V.off.height=N;V.octx=V.off.getContext('2d');V.img=V.octx.createImageData(N,N);
+  V.gb=new Float32Array(N*N);V.lb=new Uint8Array(N*N);V.fb=new Uint8Array(N*N);V.key='';
+  V.thumb=V.pane.querySelector('.sbar i');V.rd=V.pane.querySelector('.rd');
+  MEAS[name]=null;
+}
+// read a slice out of the voxel volume: trilinear grey, nearest label/finding
+function sliceFromVolume(V){
+  const {x0,y0,z0,s,nx,ny,nz}=VOL,sxy=nx*nz,w={x:0,y:0,z:0};w[V.fix]=S.cur[V.fix];
+  for(let py=0;py<N;py++)for(let px=0;px<N;px++){
+    const o=px+py*N;
+    w[V.u]=V.cu+V.us*((px+.5)/N-.5)*FOV;w[V.v]=V.cv+V.vs*(.5-(py+.5)/N)*FOV;
+    const fx=(w.x-x0)/s,fy=(w.y-y0)/s,fz=(w.z-z0)/s;
+    if(fx<0||fy<0||fz<0||fx>nx-1.001||fy>ny-1.001||fz>nz-1.001){V.gb[o]=-1;V.lb[o]=254;V.fb[o]=255;continue}
+    const i=fx|0,j=fy|0,k=fz|0,a=fx-i,b=fy-j,c=fz-k,q=i+nx*k+sxy*j;
+    const n=q+(a<.5?0:1)+(c<.5?0:nx)+(b<.5?0:sxy);
+    if(VL[n]===254){V.gb[o]=-1;V.lb[o]=254;V.fb[o]=255;continue}
+    const g00=VG[q]*(1-a)+VG[q+1]*a,g01=VG[q+nx]*(1-a)+VG[q+nx+1]*a,g10=VG[q+sxy]*(1-a)+VG[q+sxy+1]*a,g11=VG[q+sxy+nx]*(1-a)+VG[q+sxy+nx+1]*a;
+    V.gb[o]=(g00*(1-c)+g01*c)*(1-b)+(g10*(1-c)+g11*c)*b;V.lb[o]=VL[n];V.fb[o]=VF[n];
+  }
+}
+// until the volume lands: sample the model directly at half resolution
+function sliceDirect(V){
+  const w={x:0,y:0,z:0};w[V.fix]=S.cur[V.fix];
+  for(let py=0;py<N;py+=2)for(let px=0;px<N;px+=2){
+    w[V.u]=V.cu+V.us*((px+1)/N-.5)*FOV;w[V.v]=V.cv+V.vs*(.5-(py+1)/N)*FOV;
+    sample(w.x,w.y,w.z);
+    const g=SMP.lab===254?-1:SMP.g,f=SMP.f<0?255:SMP.f;
+    for(const o of [px+py*N,px+1+py*N,px+(py+1)*N,px+1+(py+1)*N]){V.gb[o]=g;V.lb[o]=SMP.lab;V.fb[o]=f}
+  }
+}
+const labVisible=l=>{
+  if(!S.ai)return false;
+  if(l===2)return S.st.maxilla;if(l===3)return S.st.mandible;if(l===4)return S.st.sinus;if(l===5)return S.st.nasal;
+  if(l===6)return S.st.airway;if(l===7)return S.st.canal;if(l===8)return S.st.teethU||S.st.teethL;if(l>=100&&l<100+TEETH.length)return tOn(TEETH[l-100]);return false;
+};
+const hexCache={};function hex(h){return hexCache[h]||(hexCache[h]=[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)))}
+function computeSlice(V){
+  const t=performance.now();
+  (volReady?sliceFromVolume:sliceDirect)(V);
+  const W=WINDOWS[S.win],d=V.img.data,selIdx=S.sel!=null?100+TEETH.indexOf(TBY[S.sel]):-999;
+  const noff=((Math.round(S.cur[V.fix]*2)%2)+2)%2*N*N,lb=V.lb,fb=V.fb;
+  const visL=new Uint8Array(256);for(let l=0;l<256;l++)visL[l]=labVisible(l)?1:0;
+  const visF=FIND.map(F=>fOn(F)&&tOn(TBY[F.tooth]));
+  for(let o=0;o<N*N;o++){
+    let g=V.gb[o];const p=o*4;
+    if(g<0){d[p]=d[p+1]=d[p+2]=0;d[p+3]=255;continue}
+    if(!SCAN)g+=NOISE[o+noff]*(g>40?16:8);
+    g=clamp((g-W.l+W.w/2)/W.w*255,0,255);
+    if(S.invert)g=255-g;
+    let r=g,gg=g,b=g;
+    const l=lb[o],px=o%N;
+    if(visL[l]){
+      const lr=px<N-1?lb[o+1]:l,ld=o+N<N*N?lb[o+N]:l,ll=px>0?lb[o-1]:l,lu=o>=N?lb[o-N]:l;
+      if(lr!==l||ld!==l||ll!==l||lu!==l){const k=l===selIdx?.75:.38,c=l===selIdx?[120,190,230]:[235,238,240];r+=(c[0]-r)*k;gg+=(c[1]-gg)*k;b+=(c[2]-b)*k}
+      else if(l===selIdx){r=r*.84+72*.16;gg=gg*.84+145*.16;b=b*.84+183*.16}
+    }
+    const fi=fb[o];
+    if(fi!==255&&visF[fi]){
+      const c=hex(TYPES[FIND[fi].t].c),edge=(px<N-1&&fb[o+1]!==fi)||(px>0&&fb[o-1]!==fi)||(o>=N&&fb[o-N]!==fi)||(o+N<N*N&&fb[o+N]!==fi);
+      const k=edge?.95:(FIND[fi].kind==='tooth'?.22:(S.selF===fi?.6:.42));
+      r+=(c[0]-r)*k;gg+=(c[1]-gg)*k;b+=(c[2]-b)*k;
+    }
+    d[p]=r;d[p+1]=gg;d[p+2]=b;d[p+3]=255;
+  }
+  V.octx.putImageData(V.img,0,0);
+  V.ms=performance.now()-t;
+}
+function geom(V){const r=V.el.getBoundingClientRect(),s=Math.min(r.width,r.height)*.98;return{r,s,ox:(r.width-s)/2,oy:(r.height-s)/2}}
+function worldToScreen(V,G,axis,val){
+  if(axis===V.u)return G.ox+((val-V.cu)*V.us/FOV+.5)*G.s;
+  return G.oy+(.5-(val-V.cv)*V.vs/FOV)*G.s;
+}
+function screenToWorld(V,G,sx,sy){
+  const u=((sx-G.ox)/G.s-.5)*FOV,v=(.5-(sy-G.oy)/G.s)*FOV;
+  const w={...S.cur};w[V.u]=V.cu+V.us*u;w[V.v]=V.cv+V.vs*v;return w;
+}
+function drawSlice(V){
+  const key=[S.cur[V.fix],ver,volReady].join('|');
+  if(key!==V.key){computeSlice(V);V.key=key}
+  const dpr=Math.min(devicePixelRatio,2),G=geom(V),W=Math.round(G.r.width*dpr),H=Math.round(G.r.height*dpr);
+  if(!W||!H)return;
+  if(V.el.width!==W||V.el.height!==H){V.el.width=W;V.el.height=H}
+  const c=V.ctx;c.setTransform(dpr,0,0,dpr,0,0);c.fillStyle='#000';c.fillRect(0,0,G.r.width,G.r.height);
+  c.imageSmoothingEnabled=true;c.imageSmoothingQuality='high';c.drawImage(V.off,G.ox,G.oy,G.s,G.s);
+  c.lineWidth=1;
+  const xu=worldToScreen(V,G,V.u,S.cur[V.u]),yv=worldToScreen(V,G,V.v,S.cur[V.v]);
+  c.globalAlpha=.7;
+  c.strokeStyle=PLANE_COLOR[V.u];c.beginPath();c.moveTo(xu+.5,G.oy);c.lineTo(xu+.5,yv-9);c.moveTo(xu+.5,yv+9);c.lineTo(xu+.5,G.oy+G.s);c.stroke();
+  c.strokeStyle=PLANE_COLOR[V.v];c.beginPath();c.moveTo(G.ox,yv+.5);c.lineTo(xu-9,yv+.5);c.moveTo(xu+9,yv+.5);c.lineTo(G.ox+G.s,yv+.5);c.stroke();
+  c.globalAlpha=1;
+  const m=MEAS[V.name];
+  if(m&&Math.abs(m.fix-S.cur[V.fix])<.6){
+    const pts=[m.a,m.b||m.hover].filter(Boolean).map(p=>[worldToScreen(V,G,V.u,p[V.u]),worldToScreen(V,G,V.v,p[V.v])]);
+    c.strokeStyle='#ffd34d';c.fillStyle='#ffd34d';c.lineWidth=1.5;
+    if(pts.length===2){c.beginPath();c.moveTo(...pts[0]);c.lineTo(...pts[1]);c.stroke()}
+    for(const p of pts){c.beginPath();c.arc(p[0],p[1],3,0,7);c.fill()}
+    if(pts.length===2){
+      const q=m.b||m.hover,dist=Math.hypot(q.x-m.a.x,q.y-m.a.y,q.z-m.a.z);
+      const tx=(pts[0][0]+pts[1][0])/2+8,ty=(pts[0][1]+pts[1][1])/2-8,t=dist.toFixed(1)+' mm';
+      c.font='500 13px Recta,Helvetica,Arial';const tw=c.measureText(t).width;
+      c.fillStyle='#191b1de6';c.beginPath();c.roundRect(tx-6,ty-14,tw+12,21,5);c.fill();c.fillStyle='#ffd34d';c.fillText(t,tx,ty);
+    }
+  }
+  const [lo,hi]=RANGE[V.fix],val=S.cur[V.fix];
+  V.rd.textContent=`${Math.round((val-lo)*2)+1} / ${Math.round((hi-lo)*2)+1}  ·  ${val>=0?'+':''}${val.toFixed(1)} mm`;
+  V.thumb.style.top=((hi-val)/(hi-lo)*100)+'%';
+}
+
+/* ═══════════════ 3D ═══════════════ */
+const pane3=document.querySelector('.p3d'),c3=document.getElementById('c3d');
+const renderer=new THREE.WebGLRenderer({canvas:c3,antialias:true,preserveDrawingBuffer:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,1.75));renderer.setClearColor(0x000000);
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(28,1,1,2000);
+const HOME=SCAN?{tgt:new V3(VIEWS.axial.cu,VIEWS.coronal.cv,VIEWS.axial.cv)}:{pos:new V3(0,14,250),tgt:new V3(0,12,0)};
+if(SCAN)HOME.pos=HOME.tgt.clone().add(new V3(0,4,FOV*2.4));
+camera.position.copy(HOME.pos);
+const controls=new OrbitControls(camera,c3);controls.target.copy(HOME.tgt);controls.enableDamping=true;controls.dampingFactor=.12;controls.minDistance=70;controls.maxDistance=520;controls.rotateSpeed=.7;controls.zoomSpeed=3;
+scene.add(new THREE.HemisphereLight(0xfff6ee,0x2a2420,.9));
+const key=new THREE.DirectionalLight(0xffffff,1.9);key.position.set(80,120,200);scene.add(key);
+const fill=new THREE.DirectionalLight(0xbfd8ff,.6);fill.position.set(-160,-30,60);scene.add(fill);
+const rim=new THREE.DirectionalLight(0xffffff,.7);rim.position.set(0,60,-200);scene.add(rim);
+const root=new THREE.Group();scene.add(root);
+let dirty3=true;const inval3=()=>{dirty3=true};
+
+const boneMat=new THREE.MeshStandardMaterial({color:0xa98a80,roughness:.62,metalness:0,transparent:true,opacity:1});
+const mats={
+  sinus:new THREE.MeshStandardMaterial({color:0x6fcf97,roughness:.5,transparent:true,opacity:.55,depthWrite:false}),
+  nasal:new THREE.MeshStandardMaterial({color:0x56b4c9,roughness:.5,transparent:true,opacity:.5,depthWrite:false}),
+  airway:new THREE.MeshStandardMaterial({color:0x8c7ae6,roughness:.5,transparent:true,opacity:.5,depthWrite:false}),
+  canal:new THREE.MeshStandardMaterial({color:0xe2574c,roughness:.4,emissive:0x5a1510}),
+};
+const OBJ={maxilla:null,mandible:null,sinus:[],nasal:[],airway:[],canal:[],restor:null,teeth:{},finds:[]};
+
+// teeth: crown/trunk lathe scaled bucco-lingually, cusps on posterior teeth, separate roots on molars
+function crownGeo(T){
+  const hs=[];
+  for(let k=0;k<=16;k++)hs.push(T.capH*k/16);
+  for(let k=1;k<=10;k++)hs.push(T.capH+(T.crown-T.capH)*k/10);
+  const tail=T.body-T.crown;for(let k=1;k<=22;k++)hs.push(T.crown+tail*k/22);
+  const g=new THREE.LatheGeometry(hs.map(h=>new THREE.Vector2(rad(T,Math.min(h,T.body)),h)),40);
+  if(T.i>=3){                                                     // occlusal anatomy: central fossa + cusps
+    const p=g.attributes.position,nc=T.i>=5?4:2,ph=T.i>=5?Math.PI/4:0,lim=T.capH*1.2;
+    for(let k=0;k<p.count;k++){
+      const x=p.getX(k),y=p.getY(k),z=p.getZ(k);if(y>lim)continue;
+      const rn=Math.min(1,Math.hypot(x,z)/T.r0),a=Math.atan2(z,x);
+      const cusp=Math.max(0,Math.cos(nc*(a-ph)))*Math.sin(Math.PI*rn)*(T.i>=5?.9:.6);
+      p.setY(k,y+(1.3*(1-rn)**2-cusp)*(1-y/lim));
+    }
+  }
+  g.scale(T.sm,1,T.so);g.computeVertexNormals();
+  return g;
+}
+function rootGeo(R){
+  const a=new V3(...R.a),b=new V3(...R.b),L=a.distanceTo(b),pts=[new THREE.Vector2(0,-R.ra*.6)];
+  for(let k=0;k<=18;k++){const t=k/18;pts.push(new THREE.Vector2(R.ra+(R.rb-R.ra)*t,t*L))}
+  pts.push(new THREE.Vector2(R.rb*.5,L+R.rb*.7),new THREE.Vector2(0,L+R.rb));
+  const g=new THREE.LatheGeometry(pts,20);
+  g.applyMatrix4(new THREE.Matrix4().compose(a,new THREE.Quaternion().setFromUnitVectors(new V3(0,1,0),b.clone().sub(a).normalize()),new V3(1,1,1)));
+  return g;
+}
+for(const T of TEETH){
+  const mat=new THREE.MeshStandardMaterial({color:T.restor?0xeef2f5:0xd9d5cd,roughness:T.restor?.25:.4,metalness:T.restor?.55:0});
+  const grp=new THREE.Group();grp.userData={tooth:T.num};
+  if(!SCAN){                                         // scan mode: filled in by buildFromLabels
+    const crown=new THREE.Mesh(crownGeo(T),mat);
+    crown.matrixAutoUpdate=false;
+    crown.matrix.makeBasis(new V3(T.e1.x,T.e1.y,T.e1.z),new V3(T.axis.x,T.axis.y,T.axis.z),new V3(T.e2.x,T.e2.y,T.e2.z)).setPosition(T.tip.x,T.tip.y,T.tip.z);
+    crown.userData={tooth:T.num};grp.add(crown);
+    if(T.roots)for(const R of T.roots){const m=new THREE.Mesh(rootGeo(R),mat);m.userData={tooth:T.num};grp.add(m)}
+  }
+  grp.material=mat;root.add(grp);OBJ.teeth[T.num]=grp;
+}
+const ell=(c,r,mat)=>{const m=new THREE.Mesh(new THREE.SphereGeometry(1,40,28),mat);m.position.set(...c);m.scale.set(...r);root.add(m);return m};
+const cap=(a,b,r,mat)=>{const va=new V3(...a),vb=new V3(...b),L=va.distanceTo(vb);const m=new THREE.Mesh(new THREE.CapsuleGeometry(r,L,8,24),mat);m.position.copy(va).add(vb).multiplyScalar(.5);m.quaternion.setFromUnitVectors(new V3(0,1,0),vb.clone().sub(va).normalize());root.add(m);return m};
+if(!SCAN){
+OBJ.sinus=SINUS.map(s=>ell(s.c,s.r.map(v=>v*.97),mats.sinus));
+OBJ.nasal=[ell(NASAL.c,[5,13,12.5],mats.nasal)];
+OBJ.airway=[cap(AIRW[0],AIRW[1],6.3,mats.airway),cap(AIRW[1],AIRW[2],5.3,mats.airway)];
+OBJ.canal=CANALS.map(Pp=>{const pts=[];for(let i=0;i<Pp.length;i+=3)pts.push(new V3(Pp[i],Pp[i+1],Pp[i+2]));const m=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),60,1.25,12,false),mats.canal);root.add(m);return m});
+}
+for(const F of FIND){
+  const col=new THREE.Color(TYPES[F.t].c);let m=null;
+  if(F.kind!=='tooth'){m=new THREE.Mesh(new THREE.SphereGeometry(F.r*(F.kind==='lesion'?1:.8),24,16),new THREE.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:.45,roughness:.4,transparent:F.kind==='lesion',opacity:.8}));
+    m.position.set(F.pos.x,F.pos.y,F.pos.z);if(F.kind==='blob')m.scale.set(1,.7,1);m.userData={find:F.i};root.add(m)}
+  OBJ.finds[F.i]=m;
+}
+const planeG=new THREE.Group();scene.add(planeG);
+const PL={};
+for(const ax of ['x','y','z']){
+  const col=new THREE.Color(PLANE_COLOR[ax]),g=new THREE.Group();
+  g.add(new THREE.Mesh(new THREE.PlaneGeometry(FOV,FOV),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.06,side:THREE.DoubleSide,depthWrite:false})),
+        new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(FOV,FOV)),new THREE.LineBasicMaterial({color:col,transparent:true,opacity:.85})));
+  if(ax==='y')g.rotation.x=-Math.PI/2;if(ax==='x')g.rotation.y=Math.PI/2;
+  planeG.add(g);PL[ax]=g;
+}
+let lastPl='';
+function placePlanes(){
+  const k=[S.cur.x,S.cur.y,S.cur.z,S.planes].join();if(k===lastPl)return;lastPl=k;
+  const A=VIEWS.axial,C=VIEWS.coronal,Sg=VIEWS.sagittal;
+  PL.y.position.set(A.cu,S.cur.y,A.cv);PL.z.position.set(C.cu,C.cv,S.cur.z);PL.x.position.set(S.cur.x,Sg.cv,Sg.cu);
+  planeG.visible=S.planes;inval3();
+}
+
+// bone: surface nets over the worker-computed fields (layout i + nx*(k + nz*j))
+function surfaceNets(f,nx,ny,nz,o,h){
+  const id=(i,j,k)=>i+nx*(k+nz*j),cell=new Int32Array(nx*ny*nz).fill(-1),pos=[],ind=[];
+  const C=[[0,0,0],[1,0,0],[0,1,0],[1,1,0],[0,0,1],[1,0,1],[0,1,1],[1,1,1]];
+  const E=[[0,1],[2,3],[4,5],[6,7],[0,2],[1,3],[4,6],[5,7],[0,4],[1,5],[2,6],[3,7]];
+  const v=new Float32Array(8);
+  for(let k=0;k<nz-1;k++)for(let j=0;j<ny-1;j++)for(let i=0;i<nx-1;i++){
+    let m=0;for(let c=0;c<8;c++){const q=C[c],val=f[id(i+q[0],j+q[1],k+q[2])];v[c]=val;if(val<0)m|=1<<c}
+    if(m===0||m===255)continue;
+    let sx=0,sy=0,sz=0,n=0;
+    for(const [a,b] of E){const va=v[a],vb=v[b];if((va<0)!==(vb<0)){const t=va/(va-vb),pa=C[a],pb=C[b];sx+=pa[0]+t*(pb[0]-pa[0]);sy+=pa[1]+t*(pb[1]-pa[1]);sz+=pa[2]+t*(pb[2]-pa[2]);n++}}
+    cell[id(i,j,k)]=pos.length/3;pos.push(o[0]+(i+sx/n)*h,o[1]+(j+sy/n)*h,o[2]+(k+sz/n)*h);
+  }
+  const quad=(a,b,c,d,fl)=>{if(a<0||b<0||c<0||d<0)return;if(fl)ind.push(a,c,b,a,d,c);else ind.push(a,b,c,a,c,d)};
+  for(let k=1;k<nz-1;k++)for(let j=1;j<ny-1;j++)for(let i=1;i<nx-1;i++){
+    const s=f[id(i,j,k)]<0;
+    if(s!==(f[id(i+1,j,k)]<0))quad(cell[id(i,j-1,k-1)],cell[id(i,j,k-1)],cell[id(i,j,k)],cell[id(i,j-1,k)],!s);
+    if(s!==(f[id(i,j+1,k)]<0))quad(cell[id(i-1,j,k-1)],cell[id(i-1,j,k)],cell[id(i,j,k)],cell[id(i,j,k-1)],!s);
+    if(s!==(f[id(i,j,k+1)]<0))quad(cell[id(i-1,j-1,k)],cell[id(i,j-1,k)],cell[id(i,j,k)],cell[id(i-1,j,k)],!s);
+  }
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setIndex(ind);g.computeVertexNormals();
+  return g;
+}
+function orient(g,field){
+  const p=g.attributes.position,n=g.attributes.normal;let vote=0;
+  for(let s=0;s<40;s++){const i=Math.floor(s/40*p.count),x=p.getX(i),y=p.getY(i),z=p.getZ(i),e=.5;
+    const gx=field(x+e,y,z)-field(x-e,y,z),gy=field(x,y+e,z)-field(x,y-e,z),gz=field(x,y,z+e)-field(x,y,z-e);
+    vote+=Math.sign(gx*n.getX(i)+gy*n.getY(i)+gz*n.getZ(i))}
+  if(vote<0){const a=g.index.array;for(let i=0;i<a.length;i+=3){const t=a[i+1];a[i+1]=a[i+2];a[i+2]=t}g.index.needsUpdate=true;g.computeVertexNormals()}
+}
+function buildBone(){
+  const {nx,ny,nz,x0,y0,z0,s}=BONE;
+  for(let j=0;j<ny;j++)for(let k=0;k<nz;k++)for(let i=0;i<nx;i++)
+    if(!i||!j||!k||i===nx-1||j===ny-1||k===nz-1){const o=i+nx*(k+nz*j);BF1[o]=BF2[o]=1}
+  const gm=surfaceNets(BF1,nx,ny,nz,[x0,y0,z0],s),gd=surfaceNets(BF2,nx,ny,nz,[x0,y0,z0],s);
+  orient(gm,(x,y,z)=>(boneParts(x,y,z),P.mx));orient(gd,(x,y,z)=>(boneParts(x,y,z),P.md));
+  OBJ.maxilla=new THREE.Mesh(gm,boneMat);OBJ.mandible=new THREE.Mesh(gd,boneMat);
+  OBJ.maxilla.renderOrder=OBJ.mandible.renderOrder=2;
+  root.add(OBJ.maxilla,OBJ.mandible);
+  document.getElementById('loader')?.remove();
+  apply3D();
+}
+function buildFromLabels(meshes){
+  const geo=m=>{const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(m.pos,3));g.setIndex(new THREE.BufferAttribute(m.ind,1));g.computeVertexNormals();return g};
+  const restorMat=new THREE.MeshStandardMaterial({color:0xeef2f5,roughness:.25,metalness:.6});
+  for(const m of meshes){
+    const k=m.key;
+    if(k==='maxilla'||k==='mandible'){OBJ[k]=new THREE.Mesh(geo(m),boneMat);OBJ[k].renderOrder=2;root.add(OBJ[k])}
+    else if(k==='restor'){OBJ.restor=new THREE.Mesh(geo(m),restorMat);root.add(OBJ.restor)}
+    else if(k[0]==='t'){const num=+k.slice(1),g=OBJ.teeth[num];if(!g)continue;const me=new THREE.Mesh(geo(m),g.material);me.userData={tooth:num};g.add(me)}
+    else if(mats[k]){const me=new THREE.Mesh(geo(m),mats[k]);root.add(me);OBJ[k]=[me]}
+  }
+  if(!OBJ.maxilla){OBJ.maxilla=new THREE.Group();root.add(OBJ.maxilla)}
+  if(!OBJ.mandible){OBJ.mandible=new THREE.Group();root.add(OBJ.mandible)}
+  document.getElementById('loader')?.remove();
+  apply3D();
+}
+function apply3D(){
+  const iso=S.isolate&&S.sel!=null,see=S.xray||iso;
+  if(OBJ.maxilla){OBJ.maxilla.visible=S.st.maxilla;OBJ.mandible.visible=S.st.mandible}
+  boneMat.opacity=see?.22:1;boneMat.depthWrite=!see;
+  OBJ.sinus.forEach(m=>m.visible=S.ai&&S.st.sinus&&see);
+  OBJ.nasal.forEach(m=>m.visible=S.ai&&S.st.nasal&&see);
+  OBJ.airway.forEach(m=>m.visible=S.ai&&S.st.airway&&see);
+  OBJ.canal.forEach(m=>m.visible=S.ai&&S.st.canal&&(see||!S.st.mandible));
+  for(const T of TEETH){
+    const g=OBJ.teeth[T.num];g.visible=tOn(T)&&(!iso||T.num===S.sel);
+    const imp=FIND.some(F=>F.kind==='tooth'&&F.tooth===T.num&&fOn(F));
+    g.material.emissive.set(T.num===S.sel?0x2c6e96:imp?0x5a1a14:0x000000);
+    g.material.emissiveIntensity=T.num===S.sel?.8:1;
+  }
+  for(const F of FIND){const m=OBJ.finds[F.i];if(m)m.visible=fOn(F)&&tOn(TBY[F.tooth])&&(!iso||F.tooth===S.sel)}
+  if(OBJ.restor)OBJ.restor.visible=(S.st.teethU||S.st.teethL)&&!iso;
+  placePlanes();inval3();
+}
+
+// markers + the pinned hover modal for the selected finding
+const mkWrap=document.getElementById('markers');
+const MK=FIND.map(F=>{const d=document.createElement('div');d.className='mk';d.style.setProperty('--c',TYPES[F.t].c);mkWrap.appendChild(d);return d});
+const pin=document.createElement('div');pin.className='hm pin';
+pin.innerHTML='<span class="sp"></span><span class="tx"></span><button class="eye" title="Hide this pathology"><img src="assets/visibility.svg" width="16" height="16" alt=""></button><span class="tail"></span>';
+mkWrap.appendChild(pin);
+pin.querySelector('.eye').onclick=()=>{const F=FIND[S.selF];if(F){S.typeOn[F.t]=false;S.selF=null;refresh();toast(`${TYPES[F.t].name} hidden`)}};
+const tmp=new V3();
+function updateMarkers(w,h){
+  const iso=S.isolate&&S.sel!=null;let pinned=false;
+  FIND.forEach((F,i)=>{
+    const d=MK[i],show=fOn(F)&&tOn(TBY[F.tooth])&&(!iso||F.tooth===S.sel);
+    tmp.set(F.pos.x,F.pos.y,F.pos.z).applyMatrix4(root.matrixWorld).project(camera);
+    if(!show||tmp.z>1){d.classList.add('hid');return}
+    const x=(tmp.x+1)/2*w,y=(1-tmp.y)/2*h;
+    d.classList.remove('hid');d.style.transform=`translate(${x.toFixed(1)}px,${y.toFixed(1)}px)`;
+    if(S.selF===i){pinned=true;pin.style.setProperty('--c',TYPES[F.t].c);pin.querySelector('.tx').textContent=TYPES[F.t].name;
+      pin.style.left=x+'px';pin.style.top=(y-17)+'px';pin.style.transform='translate(-50%,-100%)'}
+  });
+  pin.classList.toggle('show',pinned);
+}
+let ease=null;
+function flyTo(p){ease={from:controls.target.clone(),to:new V3(p.x,p.y,p.z),cam:camera.position.clone(),t:0}}
+
+/* ═══════════════ Render loop (3D renders only when something changed) ═══════════════ */
+let pending=false;
+function schedule(){if(!pending){pending=true;requestAnimationFrame(()=>{pending=false;drawAll()})}}
+function drawAll(){for(const V of Object.values(VIEWS))if(V.pane.offsetParent)drawSlice(V);placePlanes()}
+function size3D(){const r=pane3.getBoundingClientRect(),pr=renderer.getPixelRatio();if(!r.width)return[0,0];
+  if(c3.width!==Math.round(r.width*pr)||c3.height!==Math.round(r.height*pr)){renderer.setSize(r.width,r.height,false);camera.aspect=r.width/r.height;camera.updateProjectionMatrix();dirty3=true}return[r.width,r.height]}
+let frames3=0;
+renderer.setAnimationLoop(()=>{
+  if(!pane3.offsetParent)return;
+  const [w,h]=size3D();
+  if(ease){ease.t=Math.min(1,ease.t+.06);const k=1-Math.pow(1-ease.t,3);const nt=ease.from.clone().lerp(ease.to,k);camera.position.copy(ease.cam).add(nt.clone().sub(ease.from));controls.target.copy(nt);if(ease.t>=1)ease=null;dirty3=true}
+  if(S.spin){root.rotation.y+=.004;dirty3=true}
+  if(controls.update())dirty3=true;
+  if(!dirty3)return;
+  dirty3=false;frames3++;renderer.render(scene,camera);updateMarkers(w,h);
+});
+new ResizeObserver(()=>{schedule();inval3()}).observe(document.getElementById('views'));
+
+/* ═══════════════ Hover modal ═══════════════ */
+const tip=document.getElementById('tip'),tipTx=tip.querySelector('.tx');
+function showTip(e,title,sub,c){
+  tip.classList.toggle('plain',!c);tip.style.setProperty('--c',c||'#ffffff');
+  tipTx.innerHTML=title+(sub?`<small>${sub}</small>`:'');tip.classList.add('show');
+  tip.style.left=(e.clientX+14)+'px';tip.style.top=(e.clientY+14)+'px';
+}
+const hideTip=()=>tip.classList.remove('show');
+
+/* ═══════════════ Interaction: slices ═══════════════ */
+function setActive(v){S.active=v;document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('active',p.dataset.v===v))}
+function setCur(w){for(const a of ['x','y','z'])S.cur[a]=clamp(Math.round(w[a]*2)/2,...RANGE[a]);schedule()}
+function hitInfo(w){
+  sample(w.x,w.y,w.z);
+  if(SMP.lab===254)return null;
+  const f=SMP.f>=0&&fOn(FIND[SMP.f])&&tOn(TBY[FIND[SMP.f].tooth])?FIND[SMP.f]:null;
+  const l=SMP.lab,t=l>=100&&l<200?TEETH[l-100]:null;
+  return{f,t,l};
+}
+for(const V of Object.values(VIEWS)){
+  const cv=V.el;let drag=false;
+  cv.addEventListener('pointerdown',e=>{
+    setActive(V.name);const G=geom(V),r=G.r,w=screenToWorld(V,G,e.clientX-r.left,e.clientY-r.top);
+    if(S.mode==='measure'){const m=MEAS[V.name];if(!m||m.b||Math.abs(m.fix-S.cur[V.fix])>.6)MEAS[V.name]={a:w,b:null,fix:S.cur[V.fix]};else m.b=w;schedule();return}
+    drag=true;cv.setPointerCapture(e.pointerId);setCur(w);
+  });
+  cv.addEventListener('pointermove',e=>{
+    const G=geom(V),r=G.r,sx=e.clientX-r.left,sy=e.clientY-r.top,w=screenToWorld(V,G,sx,sy);
+    if(drag){setCur(w);hideTip();return}
+    const m=MEAS[V.name];if(S.mode==='measure'&&m&&!m.b){m.hover=w;schedule()}
+    if(sx<G.ox||sx>G.ox+G.s||sy<G.oy||sy>G.oy+G.s){hideTip();return}
+    const hi=hitInfo(w);
+    if(!hi){hideTip();return}
+    if(hi.f)showTip(e,TYPES[hi.f.t].name,`Tooth ${hi.f.tooth}`,TYPES[hi.f.t].c);
+    else if(hi.t&&tOn(hi.t)&&S.ai)showTip(e,`Tooth ${hi.t.num}`,`${QNAME[hi.t.q]} ${TNAME[hi.t.i]}`);
+    else if(labVisible(hi.l))showTip(e,LABEL_NAME[hi.l]);else hideTip();
+  });
+  cv.addEventListener('pointerup',e=>{
+    if(!drag)return;drag=false;
+    const G=geom(V),r=G.r,w=screenToWorld(V,G,e.clientX-r.left,e.clientY-r.top),hi=hitInfo(w);
+    if(hi&&hi.f&&e.detail===1)selectFinding(hi.f.i,false);else if(hi&&hi.t&&tOn(hi.t)&&S.ai&&e.detail===1)selectTooth(hi.t.num,false);
+  });
+  cv.addEventListener('pointerleave',()=>{hideTip();const m=MEAS[V.name];if(m&&!m.b){m.hover=null;schedule()}});
+  cv.addEventListener('dblclick',()=>toggleMax(V.name));
+  cv.addEventListener('wheel',e=>{e.preventDefault();setActive(V.name);const st=(e.shiftKey?5:.5)*Math.sign(e.deltaY);S.cur[V.fix]=clamp(S.cur[V.fix]+st*(V.fix==='z'?-1:1),...RANGE[V.fix]);schedule()},{passive:false});
+  const sb=V.pane.querySelector('.sbar');
+  const sbSet=e=>{const r=sb.getBoundingClientRect(),f=clamp((e.clientY-r.top)/r.height,0,1),[lo,hi]=RANGE[V.fix];S.cur[V.fix]=Math.round((hi-f*(hi-lo))*2)/2;schedule()};
+  sb.addEventListener('pointerdown',e=>{sb.setPointerCapture(e.pointerId);setActive(V.name);sbSet(e);sb.onpointermove=sbSet});
+  sb.addEventListener('pointerup',()=>sb.onpointermove=null);
+}
+
+/* ═══════════════ Interaction: 3D ═══════════════ */
+const ray=new THREE.Raycaster(),ndc=new THREE.Vector2();let down=null;
+function pick(e){
+  const r=c3.getBoundingClientRect();ndc.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);ray.setFromCamera(ndc,camera);
+  const cands=[...Object.values(OBJ.teeth).filter(g=>g.visible).flatMap(g=>g.children),...OBJ.finds.filter(m=>m&&m.visible)];
+  if(!S.xray&&!(S.isolate&&S.sel!=null))cands.push(...[OBJ.maxilla,OBJ.mandible].filter(m=>m&&m.visible));
+  const h=ray.intersectObjects(cands,false)[0];return h?h.object.userData:null;
+}
+c3.addEventListener('pointerdown',e=>{down=[e.clientX,e.clientY];setActive('3d');ease=null});
+c3.addEventListener('pointerup',e=>{
+  if(!down||Math.hypot(e.clientX-down[0],e.clientY-down[1])>4)return;
+  const u=pick(e);if(!u)return;
+  if(u.find!=null)selectFinding(u.find,true);else if(u.tooth!=null)selectTooth(u.tooth,true);
+});
+let hoverT=0;
+c3.addEventListener('pointermove',e=>{
+  if(e.buttons){hideTip();return}
+  const now=performance.now();if(now-hoverT<40)return;hoverT=now;                   // raycasts throttled
+  const u=pick(e);c3.style.cursor=u&&(u.tooth||u.find!=null)?'pointer':'';
+  if(u&&u.find!=null){const F=FIND[u.find];showTip(e,TYPES[F.t].name,`Tooth ${F.tooth}`,TYPES[F.t].c)}
+  else if(u&&u.tooth){const T=TBY[u.tooth],n=FIND.filter(F=>F.tooth===T.num&&fOn(F)).length;showTip(e,`Tooth ${T.num}`,`${QNAME[T.q]} ${TNAME[T.i]}${n?` · ${n} finding${n>1?'s':''}`:''}`)}
+  else hideTip();
+});
+c3.addEventListener('pointerleave',hideTip);
+c3.addEventListener('dblclick',()=>toggleMax('3d'));
+document.querySelectorAll('.rb button').forEach(b=>b.onclick=()=>{
+  const z=b.dataset.z;if(z==='max')return toggleMax('3d');
+  const d=camera.position.clone().sub(controls.target),L=clamp(d.length()*(z==='in'?.82:1.22),controls.minDistance,controls.maxDistance);
+  camera.position.copy(controls.target).add(d.setLength(L));inval3();
+});
+
+/* ═══════════════ Selection ═══════════════ */
+const toothFocus=T=>({x:T.tip.x+T.axis.x*T.crown*.6,y:T.tip.y+T.axis.y*T.crown*.6,z:T.tip.z+T.axis.z*T.crown*.6});
+function selectTooth(num,center=true){
+  if(S.sel===num&&S.selF==null){S.sel=null;S.isolate=false}else{S.sel=num;S.selF=null}
+  if(S.sel!=null){const T=TBY[num];if(center)setCur(toothFocus(T));flyTo(T.c)}else flyTo(HOME.tgt);
+  refresh();
+}
+function selectFinding(i,center=true){
+  const F=FIND[i];S.selF=i;S.sel=F.tooth;
+  if(center)setCur(F.pos);flyTo(F.pos);refresh();
+}
+function clearSel(){S.sel=null;S.selF=null;S.isolate=false;flyTo(HOME.tgt);refresh()}
+
+/* ═══════════════ Right panel ═══════════════ */
+const ARW='<span class="arw"><img src="assets/arrow.svg" width="8" height="4.707" alt=""></span>';
+const cb=(c,extra='')=>`<span class="cb ${extra}" style="--c:${c};--ck:${lum(c)>.6?'#000':'#fff'}">${CHECK}</span>`;
+const plist=document.getElementById('plist'),typeIdx={};
+for(const [k,T] of Object.entries(TYPES)){
+  const n=FIND.filter(F=>F.t===k).length,r=document.createElement('div');
+  r.className='it';r.style.setProperty('--c',T.c);r.dataset.t=k;
+  r.innerHTML=`<span class="lb">${T.name}</span><span class="n">${n}</span>${cb(T.c)}`;
+  r.onclick=e=>{
+    if(e.target.closest('.cb')){S.typeOn[k]=!S.typeOn[k];if(!S.typeOn[k]&&S.selF!=null&&FIND[S.selF].t===k)S.selF=null;refresh();return}
+    S.typeOn[k]=true;S.ai=true;
+    const list=FIND.filter(F=>F.t===k);typeIdx[k]=((typeIdx[k]??-1)+1)%list.length;selectFinding(list[typeIdx[k]].i);
+  };
+  plist.appendChild(r);
+}
+document.getElementById('pathHead').onclick=e=>{
+  if(e.target.closest('.cb')){const on=!Object.values(S.typeOn).every(Boolean);for(const k in S.typeOn)S.typeOn[k]=on;refresh();return}
+  plist.classList.toggle('closed');
+};
+const GROUPS=[
+  {name:'Maxillary Complex',items:[['maxilla','Maxilla','#c9a99f'],['sinus','Sinuses','#6fcf97'],['nasal','Nasal Cavity','#56b4c9']]},
+  {name:'Mandible',items:[['mandible','Mandible','#c9a99f'],['canal','Mandibular Canal','#e2574c']]},
+  {name:'Teeth',items:[['teethU','Maxillary Teeth','#e8e4dc'],['teethL','Mandibular Teeth','#e8e4dc']],chart:true},
+  {name:'Airway',items:[['airway','Airway','#8c7ae6']]},
+];
+const groupsEl=document.getElementById('groups');
+GROUPS.forEach((G,gi)=>{
+  const head=document.createElement('div');head.className='ghead dim';head.dataset.g=gi;
+  head.innerHTML=`<p>${G.name}${ARW}</p><span class="cb line" style="--ck:#fff">${CHECK}</span>`;
+  const sub=document.createElement('div');sub.className='items closed';
+  head.onclick=e=>{
+    if(e.target.closest('.cb')){const on=!G.items.every(([k])=>S.st[k]);G.items.forEach(([k])=>S.st[k]=on);refresh();return}
+    G.open=!G.open;head.classList.toggle('open',G.open);sub.classList.toggle('closed',!G.open);
+  };
+  for(const [k,label,c] of G.items){
+    const r=document.createElement('div');r.className='it';r.dataset.k=k;r.style.setProperty('--c',c);
+    r.innerHTML=`<span class="lb">${label}</span>${cb(c)}`;
+    r.onclick=()=>{S.st[k]=!S.st[k];refresh()};sub.appendChild(r);
+  }
+  if(G.chart){
+    const ch=document.createElement('div');ch.className='chart';
+    [[18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28],[48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38]].forEach((row,ri)=>{
+      if(ri)ch.insertAdjacentHTML('beforeend','<div class="gap"></div>');
+      for(const n of row){const d=document.createElement('div');d.className='tooth';d.dataset.n=n;d.textContent=n;
+        if(!TBY[n]){d.classList.add('miss');d.textContent='';d.title=`${n} · missing`}
+        else{if(TBY[n].restor)d.classList.add('rest');d.onclick=()=>selectTooth(n);
+          d.onmouseenter=e=>{const T=TBY[n];showTip(e,`Tooth ${n}`,`${QNAME[T.q]} ${TNAME[T.i]}${T.restor?' · restored':''}`)};d.onmouseleave=hideTip}
+        ch.appendChild(d)}});
+    sub.appendChild(ch);
+  }
+  groupsEl.append(head,sub);
+});
+const card=document.getElementById('card');
+function buildCard(){
+  if(S.sel==null){card.classList.remove('show');return}
+  const T=TBY[S.sel],fs=FIND.filter(F=>F.tooth===T.num);
+  card.classList.add('show');
+  card.innerHTML=`<h4>Tooth ${T.num}<button title="Clear">×</button></h4><p>${QNAME[T.q]} ${TNAME[T.i]}${T.restor?' · restored':''}${T.multi?` · ${T.roots.length} roots`:''}</p>
+   <div class="fl">${fs.length?fs.map(F=>`<div class="fi" data-f="${F.i}" style="--c:${TYPES[F.t].c};${fOn(F)?'':'opacity:.4'}"><i></i>${TYPES[F.t].name}</div>`).join(''):'<div class="fi none">No findings</div>'}</div>
+   <div class="acts"><button class="sbtn" data-a="center">Center views</button><button class="sbtn ${S.isolate?'on':''}" data-a="iso">Isolate</button></div>`;
+  card.querySelector('h4 button').onclick=clearSel;
+  card.querySelectorAll('.fi[data-f]').forEach(d=>d.onclick=()=>selectFinding(+d.dataset.f));
+  card.querySelector('[data-a=center]').onclick=()=>{setCur(toothFocus(T));flyTo(T.c)};
+  card.querySelector('[data-a=iso]').onclick=()=>{S.isolate=!S.isolate;refresh()};
+}
+const pathCk=document.getElementById('pathCk');pathCk.innerHTML=CHECK;pathCk.style.setProperty('--ck','#fff');
+function refreshSide(){
+  document.getElementById('ai').classList.toggle('on',S.ai);
+  const ons=Object.values(S.typeOn),all=ons.every(Boolean);
+  pathCk.classList.toggle('on',all);pathCk.classList.toggle('part',!all&&ons.some(Boolean));
+  plist.querySelectorAll('.it').forEach(r=>{const k=r.dataset.t,on=S.typeOn[k]&&S.ai;r.classList.toggle('off',!on);r.querySelector('.cb').classList.toggle('on',on);r.classList.toggle('cur',S.selF!=null&&FIND[S.selF].t===k)});
+  groupsEl.querySelectorAll('.ghead').forEach(h=>{const G=GROUPS[h.dataset.g];h.querySelector('.cb').classList.toggle('on',G.items.every(([k])=>S.st[k]))});
+  groupsEl.querySelectorAll('.it[data-k]').forEach(r=>{const on=S.st[r.dataset.k];r.classList.toggle('off',!on);r.querySelector('.cb').classList.toggle('on',on)});
+  groupsEl.querySelectorAll('.tooth[data-n]').forEach(d=>{const n=+d.dataset.n,fs=FIND.filter(F=>F.tooth===n&&fOn(F));d.classList.toggle('sel',S.sel===n);d.classList.toggle('f',fs.length>0);if(fs.length)d.style.setProperty('--c',TYPES[fs[0].t].c)});
+  buildCard();
+}
+function refresh(){refreshSide();apply3D();bump()}
+
+/* ═══════════════ Chrome ═══════════════ */
+const DATES=[['Aug ‘24',9],['Nov ‘24',22],['Aug ‘25',9],['Sep ‘25',21],['Sep ‘25',22],['Sep ‘26',16]];
+const chips=document.getElementById('chips'),chipEls=DATES.map(([m,d],i)=>{const b=document.createElement('button');b.className='chip';b.innerHTML=`<small>${m}</small><b>${d}</b>`;b.onclick=()=>pickDate(i);chips.appendChild(b);return b});
+let dateI=4;
+function pickDate(i,quiet){dateI=clamp(i,0,DATES.length-1);chipEls.forEach((b,k)=>b.classList.toggle('on',k===dateI));if(!quiet){S.seed=dateI+1;reseed();bump();toast(`CBCT · ${DATES[dateI][0]} · ${DATES[dateI][1]}`)}}
+pickDate(dateI,true);
+document.getElementById('prevScan').onclick=()=>pickDate(dateI-1);
+document.getElementById('nextScan').onclick=()=>pickDate(dateI+1);
+document.getElementById('ab').onclick=e=>{e.currentTarget.classList.toggle('on');toast('A/B compare isn’t in this prototype')};
+const toastEl=document.getElementById('toast');let tt;
+function toast(t){toastEl.textContent=t;toastEl.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>toastEl.classList.remove('show'),1600)}
+document.getElementById('export').onclick=()=>toast(`Report exported · ${FIND.length} findings, 3 views`);
+const phi=document.getElementById('phi'),pt=document.getElementById('ptName');
+phi.onclick=()=>{phi.classList.toggle('on');pt.textContent=phi.classList.contains('on')?'Michael Broadwick':'M••••• B••••••'};
+document.getElementById('help').onclick=()=>toast('Scroll a slice · drag to move the crosshair · double-click to maximize · V M R W P B I L 0');
+document.getElementById('ai').onclick=()=>{S.ai=!S.ai;refresh()};
+document.getElementById('collapse').onclick=()=>{document.getElementById('app').classList.toggle('noside');schedule();inval3()};
+document.querySelectorAll('#tabs .tab').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#tabs .tab').forEach(x=>x.classList.toggle('on',x===b));
+  const cbct=b.dataset.t==='cbct';document.getElementById('mainBlk').style.display=cbct?'':'none';
+  const em=document.getElementById('emptyTab');em.style.display=cbct?'none':'';em.textContent=`${b.textContent} live in the 2D viewer. This prototype covers CBCT.`;
+});
+const rail=document.getElementById('rail');
+function setMode(m){S.mode=m;rail.querySelectorAll('[data-tool]').forEach(b=>b.classList.toggle('on',b.dataset.tool===m));
+  rail.querySelector('.hand img').src=m==='nav'?'assets/t-hand.svg':'assets/t-hand-off.svg';
+  Object.values(VIEWS).forEach(V=>V.el.classList.toggle('cursor-measure',m==='measure'));
+  if(m==='nav')for(const k in MEAS)MEAS[k]=null;schedule()}
+function tog(k){S[k]=!S[k];rail.querySelector(`[data-tog=${k}]`).classList.toggle('on',S[k]);refresh()}
+function cycleWindow(){S.win=(S.win+1)%WINDOWS.length;rail.querySelector('[data-act=window]').classList.toggle('on',S.win>0);toast(`Window · ${WINDOWS[S.win].n}`);bump()}
+function cycleLayout(){const v=document.getElementById('views');if(v.dataset.layout==='single'){toggleMax(null);return}S.layout=S.layout==='quad'?'focus':'quad';v.dataset.layout=S.layout;schedule()}
+function toggleMax(name){const v=document.getElementById('views'),cur=document.querySelector('.pane.max');
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('max'));
+  if(!name||(cur&&cur.dataset.v===name))v.dataset.layout=S.layout;
+  else{document.querySelector(`.pane[data-v="${name}"]`).classList.add('max');v.dataset.layout='single';setActive(name)}
+  schedule();inval3()}
+function resetAll(){S.cur={...HOMECUR};S.sel=null;S.selF=null;S.isolate=false;root.rotation.set(0,0,0);ease=null;camera.position.copy(HOME.pos);controls.target.copy(HOME.tgt);for(const k in MEAS)MEAS[k]=null;refresh()}
+rail.onclick=e=>{const b=e.target.closest('.tb');if(!b)return;
+  if(b.dataset.tool)setMode(b.dataset.tool);else if(b.dataset.tog)tog(b.dataset.tog);
+  else if(b.dataset.act==='window')cycleWindow();else if(b.dataset.act==='reset')resetAll();
+};
+addEventListener('keydown',e=>{
+  if(e.metaKey||e.ctrlKey)return;const k=e.key.toLowerCase();
+  if(k==='v')setMode('nav');else if(k==='m')setMode('measure');else if(k==='r')tog('spin');else if(k==='w')cycleWindow();
+  else if(k==='p')tog('planes');else if(k==='b')tog('xray');else if(k==='i')tog('invert');else if(k==='l')cycleLayout();else if(k==='0')resetAll();
+  else if(k==='escape'){if(S.mode==='measure')setMode('nav');else if(S.sel!=null)clearSel()}
+  else if((k==='arrowup'||k==='arrowdown')&&S.active!=='3d'){e.preventDefault();const V=VIEWS[S.active];S.cur[V.fix]=clamp(S.cur[V.fix]+(k==='arrowup'?.5:-.5),...RANGE[V.fix]);schedule()}
+});
+
+if(SCAN)document.getElementById('credit').textContent=`CBCT: ${SCAN.meta.name} · ${SCAN.meta.source.split(' — ')[0]} · ${SCAN.meta.licence.split(' (')[0]}`;
+refresh();
+window.__pearl={S,VIEWS,TEETH,FIND,camera,controls,selectTooth,selectFinding,refresh,inval3,drawAll,get volReady(){return volReady},get frames3(){return frames3}};
+</script>
+</body>
+</html>

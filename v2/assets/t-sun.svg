@@ -1,0 +1,14 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="48" height="34" viewBox="0 0 48 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Set">
+<g id="Icon">
+<path id="Ellipse 209" d="M22.5 17C22.5 19.4853 20.4853 21.5 18 21.5C15.5147 21.5 13.5 19.4853 13.5 17C13.5 14.5147 15.5147 12.5 18 12.5C20.4853 12.5 22.5 14.5147 22.5 17Z" stroke="white"/>
+<g id="Frame 1768">
+</g>
+<path id="Vector" d="M18 8V10M18 24V26" stroke-linecap="round" stroke="white"/>
+<path id="Vector_2" d="M11.636 10.636L13.0503 12.0503M22.9497 21.9497L24.364 23.364" stroke-linecap="round" stroke="white"/>
+<path id="Vector_3" d="M8.99949 17.0002H10.9995M24.9995 17.0002H26.9995" stroke-linecap="round" stroke="white"/>
+<path id="Vector_4" d="M11.6352 23.3648L13.0494 21.9506M22.9489 12.0511L24.3631 10.6369" stroke-linecap="round" stroke="white"/>
+</g>
+<path id="Arrow" d="M35 17L37 19L39 17" stroke-linecap="round" stroke="white"/>
+</g>
+</svg>
